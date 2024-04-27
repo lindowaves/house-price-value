@@ -1,0 +1,24 @@
+body{
+    margin: 0;
+    padding: 0;
+    font: 1em sans-serif;
+}
+
+input{
+    background: goldenrod;
+    border: none;
+    padding: 10px 20px;
+
+}
+input:hover{
+
+    background: red;
+    opacity: .6;
+    color: blueviolet;
+}
+button{
+    border: none;
+    padding: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}

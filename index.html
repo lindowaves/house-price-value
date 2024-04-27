@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>House Price Value</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@1.1.2/dist/mobilenet.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    async function loadModel() {
+      return await tf.loadGraphModel('https://property24.com');
+    }
+
+    async function predictPrice(imageData, model) {
+      const tensor = tf.browser.fromPixels(imageData)
+        .resizeNearestNeighbor([224, 224]) // Assuming input shape expected by your model
+        .toFloat()
+        .div(tf.scalar(255))
+        .expandDims();
+
+      const predictions = await model.predict(tensor).data();
+      return predictions[0]; // Assuming your model outputs a single value for price
+    }
+
+    document.addEventListener("DOMContentLoaded", async function() {
+      const model = await loadModel();
+
+      document.getElementById("submit-button").addEventListener("click", async function() {
+        const image1Input = document.getElementById("image1-input");
+        const image2Input = document.getElementById("image2-input");
+
+        const image1 = image1Input.files[0];
+        const image2 = image2Input.files[0];
+
+        if (!image1 || !image2) {
+          alert("Please select two images.");
+          return;
+        }
+
+        const reader1 = new FileReader();
+        const reader2 = new FileReader();
+
+        reader1.onload = async function() {
+          const image1_price = await predictPrice(reader1.result, model);
+
+          reader2.onload = async function() {
+            const image2_price = await predictPrice(reader2.result, model);
+
+            console.log("Predicted price for image1:", image1_price);
+            console.log("Predicted price for image2:", image2_price);
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "Predicted price for image1: $" + image1_price.toFixed(2) + "<br>" +
+                                  "Predicted price for image2: $" + image2_price.toFixed(2) + "<br><br>";
+
+            if (image1_price > image2_price) {
+              resultDiv.innerHTML += "Image1 is the better deal.";
+            } else {
+              resultDiv.innerHTML += "Image2 is the better deal.";
+            }
+          };
+
+          reader2.readAsDataURL(image2);
+        };
+
+        reader1.readAsDataURL(image1);
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>House Price Value</h1>
+  <p>Upload two images of houses and we'll tell you which one is the better deal.</p>
+  <form>
+    <input type="file" id="image1-input" accept="image/*">
+    <br><br>
+    <input type="file" id="image2-input" accept="image/*">
+    <br><br>
+    <hr>
+    <button type="button" id="submit-button">Submit</button>
+  </form>
+  <div id="result"></div>
+</body>
+</html>
